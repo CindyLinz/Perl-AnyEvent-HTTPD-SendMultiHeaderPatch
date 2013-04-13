@@ -18,7 +18,7 @@ Version 0.01
 =cut
 
 use version;
-our $VERSION = qv 'v0.1.1';
+our $VERSION = qv 'v0.1.2';
 
 use AnyEvent::HTTPD;
 
