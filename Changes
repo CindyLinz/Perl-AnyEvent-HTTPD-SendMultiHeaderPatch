@@ -1,5 +1,8 @@
 Revision history for AnyEvent-HTTPD-SendMultiHeaderPatch
 
-0.01    Date/time
+v0.1.1  2013.4.13
+        Fix the dependency.
+
+0.01    2013.4.8
         First version, released on an unsuspecting world.
 
