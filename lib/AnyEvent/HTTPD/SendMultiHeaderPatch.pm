@@ -3,6 +3,7 @@ package AnyEvent::HTTPD::SendMultiHeaderPatch;
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
+no warnings 'redefine';
 
 use AnyEvent::HTTPD::HTTPConnection;
 
@@ -13,53 +14,44 @@ AnyEvent::HTTPD::SendMultiHeaderPatch -
 
 =head1 VERSION
 
-Version 0.01
+Version 0.1.3
 
 =cut
 
-use version;
-our $VERSION = qv 'v0.1.2';
+our $VERSION = '0.001003';
 
 use AnyEvent::HTTPD;
+use AnyEvent::HTTPD::Util;
+use AnyEvent::HTTPD::HTTPConnection;
 
-package AnyEvent::HTTPD::Util;
+use Scalar::Util qw(weaken);
 
-use strict;
-use warnings;
+push @AnyEvent::HTTPD::Util::EXPORT, qw(header_add header_gets);
 
-our @EXPORT;
-push @EXPORT, qw(header_add header_gets);
-
-sub header_add {
+*AnyEvent::HTTPD::Util::header_add = sub {
     my ($hdrs, $name, $value) = @_;
-    $name = _header_transform_case_insens ($hdrs, $name);
+    $name = AnyEvent::HTTPD::Util::_header_transform_case_insens ($hdrs, $name);
     if( exists $hdrs->{$name} ) {
         $hdrs->{$name} .= "\0".$value;
     }
     else {
        $hdrs->{$name} = $value;
     }
-}
+};
 
-sub header_gets {
+*AnyEvent::HTTPD::Util::header_gets = sub {
     my ($hdrs, $name) = @_;
-    $name = _header_transform_case_insens ($hdrs, $name);
+    $name = AnyEvent::HTTPD::Util::_header_transform_case_insens ($hdrs, $name);
     exists $hdrs->{$name} ? [split /\0/, $hdrs->{$name}] : []
-}
+};
 
-package AnyEvent::HTTPD::HTTPConnection;
-
-use strict;
-use warnings;
-no warnings 'redefine';
-
-sub response {
+*AnyEvent::HTTPD::HTTPConnection::response = sub {
    my ($self, $code, $msg, $hdr, $content, $no_body) = @_;
    return if $self->{disconnected};
    return unless $self->{hdl};
 
    my $res = "HTTP/1.0 $code $msg\015\012";
-   header_set ($hdr, 'Date' => _time_to_http_date time)
+   header_set ($hdr, 'Date' => AnyEvent::HTTPD::HTTPConnection::_time_to_http_date time)
       unless header_exists ($hdr, 'Date');
    header_set ($hdr, 'Expires' => header_get ($hdr, 'Date'))
       unless header_exists ($hdr, 'Expires');
@@ -134,7 +126,7 @@ sub response {
       $self->{hdl}->push_write ($res);
       $self->response_done;
    }
-}
+};
 
 =head1 SYNOPSIS
 
